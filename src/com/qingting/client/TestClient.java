@@ -96,6 +96,7 @@ public class TestClient {
             //ops.write(ch);
             //ops.flush();
             //CONNACK
+            System.out.println("准备接收连接应答信息.");
             int result=0;
             while(true){
             	if((result =ips.read())!=-1){
@@ -104,7 +105,7 @@ public class TestClient {
             		break;
             	}
             };/**/
-            
+            System.out.println("连接应答结束，开始推送信息.");
             
             byte[] publish={
             		//固定头部
@@ -140,12 +141,13 @@ public class TestClient {
             		break;
             	}
             };*/
+            System.out.println("准备接收推送应答信息.");
             while(true){
             	int res =ips.read();
             	System.out.println("返回值："+res); 
             	if(res==-1) break;
             };/**/
-            
+            System.out.println("接收推送应答信息结束.");
             //pw.close();  
             //bfr.close();  
             //keyBoard.close();
