@@ -1,5 +1,7 @@
 package com.qingting.server;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileWriter;
@@ -23,30 +25,33 @@ public class ServerThread implements Runnable {
 	
 	    	//获取Socket的输出流，用来向客户端发送数据  
 	    	OutputStream os=client.getOutputStream();
-	    	PrintStream out = new PrintStream(os);
+	    	//PrintStream out = new PrintStream(os);
+	    	BufferedOutputStream bos=new BufferedOutputStream(os);
 	    	//接收数据写入文本
 	    	File file=new File("data.log");
 	    	if(file.createNewFile()){
 	    		System.out.println("Create file successed.");  
 	    	}
 	    	//BufferedWriter outFile = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file, true)));
-	    	 FileWriter writer=new FileWriter("data.log", true);
+	    	FileWriter writer=new FileWriter("data.log", true);
 	    	//获取Socket的输入流，用来接收从客户端发送过来的数据  
-	    	 InputStream is=client.getInputStream();
+	    	InputStream is=client.getInputStream();
+	    	BufferedInputStream bi=new BufferedInputStream(is);
 	    	BufferedReader buf = new BufferedReader(new InputStreamReader(is));  
 	    	boolean flag =true;  
 	    	int a;
 	    	System.out.println("server accept message:");
 	    	while(flag){  
 	    		//接收从客户端发送过来的数据  
-	    		a=is.read();
+	    		a=bi.read();
 	    		//a=buf.read();
-	    		System.out.print(a+" ");
-	    		if(a!=-1){
-	    			
+	    		
+	    		if(a!=-1 && a!=105){
+	    			System.out.print(a+" ");
 	    		}else{
-	    			os.write(1);
-	    	    	os.flush();
+	    			System.out.print("应答："+a+" ");
+	    			bos.write(1);
+	    	    	bos.flush();
 	    		}
 	    		
 	    		/*String str =  buf.readLine();  
@@ -79,7 +84,7 @@ public class ServerThread implements Runnable {
 	    	System.out.println("..........");
 	    	
 	    	
-	    	out.close(); 
+	    	bos.close(); 
 	    	//outFile.close();
 	    	writer.close();
 	    	buf.close();

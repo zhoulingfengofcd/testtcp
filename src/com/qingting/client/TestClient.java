@@ -1,5 +1,6 @@
 package com.qingting.client;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -9,7 +10,7 @@ import java.net.Socket;
 
 public class TestClient {
 	public static void main(String[] str) {  
-		String ipAddr="192.168.10.20";
+		String ipAddr="192.168.1.2";
 		//String ipAddr="123.207.38.80";
 		String port="8088";
         /*if(args.length<2)  
@@ -21,14 +22,15 @@ public class TestClient {
         try {  
             sk=new Socket(InetAddress.getByName(ipAddr),  
                     Integer.parseInt(port));  
-            InputStream ips=sk.getInputStream();  
-            OutputStream ops=sk.getOutputStream();  
+            InputStream is=sk.getInputStream(); 
+            BufferedInputStream bi = new BufferedInputStream(is);
+            OutputStream os=sk.getOutputStream();  
             //从服务器读取信息的包装类  
             //BufferedReader bfr=new BufferedReader(  
             //        new InputStreamReader(ips));  
             //输出信息流  
-            PrintWriter pw=new PrintWriter(ops,true);  
-            BufferedOutputStream bos=new BufferedOutputStream(ops);
+            PrintWriter pw=new PrintWriter(os,true);  
+            BufferedOutputStream bos=new BufferedOutputStream(os);
             
             
             /*while(true)  
@@ -97,14 +99,24 @@ public class TestClient {
             //ops.flush();
             //CONNACK
             System.out.println("准备接收连接应答信息.");
-            int result=0;
+            /*int result=0;
             while(true){
-            	if((result =ips.read())!=-1){
+            	if((result =bi.read())!=-1){
             		System.out.println("返回值："+result); 
             	}else{
             		break;
             	}
-            };/**/
+            };*/
+            int count = 0;
+    		while (count == 0) {
+    			count = is.available();
+    		}
+    		byte[] b = new byte[count];
+    		is.read(b);
+    		for (byte c : b) {
+				System.out.print(c+" ");
+			}
+
             System.out.println("连接应答结束，开始推送信息.");
             
             byte[] publish={
@@ -142,11 +154,21 @@ public class TestClient {
             	}
             };*/
             System.out.println("准备接收推送应答信息.");
-            while(true){
-            	int res =ips.read();
+            /*while(true){
+            	int res =bi.read();
             	System.out.println("返回值："+res); 
             	if(res==-1) break;
-            };/**/
+            };*/
+            count = 0;
+    		while (count == 0) {
+    			count = is.available();
+    		}
+    		b = new byte[count];
+    		is.read(b);
+    		for (byte c : b) {
+				System.out.print(c+" ");
+			}
+    		
             System.out.println("接收推送应答信息结束.");
             //pw.close();  
             //bfr.close();  
