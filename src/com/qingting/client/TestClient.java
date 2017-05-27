@@ -2,52 +2,37 @@ package com.qingting.client;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.Socket;
 
+import com.qingting.server.ServerThread;
+
 public class TestClient {
 	public static void main(String[] str) {  
-		String ipAddr="192.168.1.2";
-		//String ipAddr="123.207.38.80";
-		String port="8088";
-        /*if(args.length<2)  
-        {  
-            System.out.println("注意：请添加参数：<Server Ip> <Server Port>");  
-            return;  
-        } */ 
-        Socket sk=null;  
+		//String ipAddr="192.168.10.20";
+		String ipAddr="119.29.225.162";
+		String port="50020";
+      
+        Socket sk=null; 
+        //输入信息流
+        InputStream is=null; 
+        BufferedInputStream bi = null;
+        //输出信息流  
+        OutputStream os=null;
+        BufferedOutputStream bos=null;
         try {  
             sk=new Socket(InetAddress.getByName(ipAddr),  
                     Integer.parseInt(port));  
-            InputStream is=sk.getInputStream(); 
-            BufferedInputStream bi = new BufferedInputStream(is);
-            OutputStream os=sk.getOutputStream();  
-            //从服务器读取信息的包装类  
-            //BufferedReader bfr=new BufferedReader(  
-            //        new InputStreamReader(ips));  
+            //输入信息流
+            is=sk.getInputStream(); 
+            bi = new BufferedInputStream(is);
             //输出信息流  
-            PrintWriter pw=new PrintWriter(os,true);  
-            BufferedOutputStream bos=new BufferedOutputStream(os);
-            
-            
-            /*while(true)  
-            {  
-                String strWord =keyBoard.readLine(); 
-                
-                //消息发送到服务器端  
-                //pw.println(strWord);  
-                //char[] ch={0,1,1,2};
-                //pw.write(ch);
-                if(strWord.equalsIgnoreCase("quit"))  
-                {  
-                    System.out.println("客户端退出！");  
-                    break;  
-                }  
-                System.out.println(bfr.readLine());  
-            }*/  
+            os=sk.getOutputStream();
+            bos=new BufferedOutputStream(os);
             
             //CONNECT
             byte[] ch={
@@ -95,89 +80,81 @@ public class TestClient {
             };
             bos.write(ch);
             bos.flush();
-            //ops.write(ch);
-            //ops.flush();
-            //CONNACK
             System.out.println("准备接收连接应答信息.");
-            /*int result=0;
-            while(true){
-            	if((result =bi.read())!=-1){
-            		System.out.println("返回值："+result); 
-            	}else{
-            		break;
-            	}
-            };*/
+            
+    		//new Thread(new ReceiveThread(is)).start(); 
             int count = 0;
-    		while (count == 0) {
-    			count = is.available();
-    		}
-    		byte[] b = new byte[count];
-    		is.read(b);
-    		for (byte c : b) {
-				System.out.print(c+" ");
+			while (count == 0) {
+				count = is.available();
 			}
-
-            System.out.println("连接应答结束，开始推送信息.");
-            
-            byte[] publish={
-            		//固定头部
-            		50,//publish 
-            		13,//remain length
-            		//可变头部
-            		0,//topic name length
-            		3,
-            		'a',//topic name
-            		'/',
-            		'b',
-            		0,//message id
-            		10,
-            		1,//payload
-            		0,
-            		2,
-            		65,
-            		'o',
-            		'k'
-            };
-            bos.write(publish);
-            bos.flush();
-            //ops.write(publish);
-            //ops.write(-1);
-            //ops.flush();
-            
-            //response
-            /*result=0;
-            while(true){
-            	if((result =ips.read())!=-1&&result!=null){
-            		System.out.println("返回值："+result); 
-            	}else{
-            		break;
-            	}
-            };*/
-            System.out.println("准备接收推送应答信息.");
-            /*while(true){
-            	int res =bi.read();
-            	System.out.println("返回值："+res); 
-            	if(res==-1) break;
-            };*/
-            count = 0;
-    		while (count == 0) {
-    			count = is.available();
-    		}
-    		b = new byte[count];
-    		is.read(b);
-    		for (byte c : b) {
+			byte[] b = new byte[count];
+			is.read(b);
+			for (byte c : b) {
 				System.out.print(c+" ");
 			}
     		
-            System.out.println("接收推送应答信息结束.");
-            //pw.close();  
-            //bfr.close();  
-            //keyBoard.close();
+            System.out.println("连接应答结束，开始推送信息.");
             
-            sk.close();  
+            count=0;
+            while(count!=10){
+            	sendPublic(is,bos);
+            	count++;
+            }
         } catch (Exception e){  
             e.printStackTrace();  
-        }   
+        } finally {
+        	try {
+        		bi.close();
+        		is.close();
+        		bos.close();
+				os.close();
+				sk.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			} 
+		} 
   
-    } 
+    }
+	
+	public static void sendPublic(InputStream is,BufferedOutputStream bos){
+		try{
+			byte[] publish={
+	        		//固定头部
+	        		50,//publish 
+	        		13,//remain length
+	        		//可变头部
+	        		0,//topic name length
+	        		3,
+	        		'a',//topic name
+	        		'/',
+	        		'b',
+	        		0,//message id
+	        		10,
+	        		1,//payload
+	        		0,
+	        		2,
+	        		65,
+	        		'o',
+	        		'k'
+	        };
+	        bos.write(publish);
+	        bos.flush();
+	        
+	        System.out.println("准备接收推送应答信息.");
+	        
+	        int count = 0;
+			while (count == 0) {
+				count = is.available();
+			}
+			byte[] b = new byte[count];
+			is.read(b);
+			for (byte c : b) {
+				System.out.print(c+" ");
+			}
+			
+	        System.out.println("接收推送应答信息结束.");
+		} catch (Exception e){  
+            e.printStackTrace();  
+        } 
+	}
 }

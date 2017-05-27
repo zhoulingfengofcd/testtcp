@@ -5,10 +5,10 @@ import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.PrintStream;
 import java.net.Socket;
 
 public class ServerThread implements Runnable {
@@ -20,78 +20,78 @@ public class ServerThread implements Runnable {
 
     //处理通信细节的静态方法，这里主要是方便线程池服务器的调用 
     public static void execute(Socket client){
+    	//获取Socket的输入流，用来接收从客户端发送过来的数据 
+    	InputStream is=null;
+    	BufferedInputStream bi=null;
+    	BufferedReader buf=null;
+    	
+    	//获取Socket的输出流，用来向客户端发送数据 
+    	OutputStream os=null;
+    	BufferedOutputStream bos=null;
+    	//文件流
+    	File file=null;
+    	FileWriter writer=null;
+    	
 	    try{  
-	    	//BufferedReader input = new BufferedReader(new InputStreamReader(System.in));  
-	
+	    	//获取Socket的输入流，用来接收从客户端发送过来的数据  
+	    	is=client.getInputStream();
+	    	bi=new BufferedInputStream(is);
+	    	buf = new BufferedReader(new InputStreamReader(is)); 
+	    	
 	    	//获取Socket的输出流，用来向客户端发送数据  
-	    	OutputStream os=client.getOutputStream();
-	    	//PrintStream out = new PrintStream(os);
-	    	BufferedOutputStream bos=new BufferedOutputStream(os);
+	    	os=client.getOutputStream();
+	    	bos=new BufferedOutputStream(os);
+	    	
 	    	//接收数据写入文本
-	    	File file=new File("data.log");
+	    	file=new File("data.log");
 	    	if(file.createNewFile()){
 	    		System.out.println("Create file successed.");  
 	    	}
-	    	//BufferedWriter outFile = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file, true)));
-	    	FileWriter writer=new FileWriter("data.log", true);
-	    	//获取Socket的输入流，用来接收从客户端发送过来的数据  
-	    	InputStream is=client.getInputStream();
-	    	BufferedInputStream bi=new BufferedInputStream(is);
-	    	BufferedReader buf = new BufferedReader(new InputStreamReader(is));  
+	    	writer=new FileWriter("data.log", true);
+	    	
+	    	//准备接收数据  
 	    	boolean flag =true;  
-	    	int a;
-	    	System.out.println("server accept message:");
+	    	System.out.println("server prepare accept message:");
 	    	while(flag){  
 	    		//接收从客户端发送过来的数据  
-	    		a=bi.read();
-	    		//a=buf.read();
-	    		
-	    		if(a!=-1 && a!=105){
-	    			System.out.print(a+" ");
-	    		}else{
-	    			System.out.print("应答："+a+" ");
-	    			bos.write(1);
-	    	    	bos.flush();
+	    		int count = 0;
+	    		while (count == 0) {
+	    			count = is.available();
 	    		}
-	    		
-	    		/*String str =  buf.readLine();  
-	    		System.out.println("server accept message:"+str);
-	    		System.out.println();
-	    		byte[] bytes=str.getBytes();
-	    		for(int i=0;i<bytes.length;i++){
-	    			System.out.print(bytes[i]+" ");
-	    		}
-	    		if(str == null || "".equals(str)){  
-	    			flag = false;  
-	    		}else{  
-	    			if("bye".equals(str)){  
-	    				flag = false;  
-	    			}else{  
-	    				//将接收到的字符串前面加上echo，发送到对应的客户端  
-	    				// out.println("echo:" + str);  
-	    				//System.out.println("服务端输入信息：");
-	    				//String outStr = input.readLine();
-	    				//out.println(outStr);
-	    				out.println(1);
-	    				out.flush();
-	    				//outFile.write(str);
-	    				writer.write(str+"\n");
-	    				
-	    				writer.flush();
-	    			}  
-	    		} */ 
+	    		byte[] b = new byte[count];
+	    		is.read(b);
+	    		for (int i=0;i<b.length;i++) {
+	    			System.out.print(b[i]+" ");
+	    			b[i]+=1;
+				}
+	    		//writer.write(new String(b));
+	    		//writer.flush();
+	    		bos.write(b);
+	    		bos.write('A');
+	    		bos.write('C');
+	    		bos.write('K');
+	    		bos.flush();/**/
 	    	} 
-	    	System.out.println("..........");
-	    	
-	    	
-	    	bos.close(); 
-	    	//outFile.close();
-	    	writer.close();
-	    	buf.close();
-	    	client.close();  
+	    	System.out.println("server stop.");
 	   }catch(Exception e){  
 	       e.printStackTrace();  
-	   }  
+	   } finally {
+		   try {
+			   if(is!=null) is.close();
+			   if(bi!=null) bi.close();
+			   if(buf!=null) buf.close();
+			   
+			   if(os!=null) os.close();
+			   if(bos!=null) bos.close();
+			   
+			   if(writer!=null) writer.close(); 
+			   
+			   if(client!=null)client.close();
+		   } catch (IOException e) {
+			   e.printStackTrace();
+		   } 
+		   
+	   } 
     }
 
     @Override  
