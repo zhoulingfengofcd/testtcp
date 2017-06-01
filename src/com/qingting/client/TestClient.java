@@ -14,8 +14,9 @@ import com.qingting.server.ServerThread;
 public class TestClient {
 	public static void main(String[] str) {  
 		//String ipAddr="192.168.10.20";
+		//String port="50021";
 		String ipAddr="119.29.225.162";
-		String port="50020";
+		String port="40040";
       
         Socket sk=null; 
         //输入信息流
@@ -80,7 +81,7 @@ public class TestClient {
             };
             bos.write(ch);
             bos.flush();
-            System.out.println("准备接收连接应答信息.");
+            System.out.print("准备接收连接应答信息.");
             
     		//new Thread(new ReceiveThread(is)).start(); 
             int count = 0;
@@ -96,7 +97,7 @@ public class TestClient {
             System.out.println("连接应答结束，开始推送信息.");
             
             count=0;
-            while(count!=10){
+            while(true){
             	sendPublic(is,bos);
             	count++;
             }
@@ -140,7 +141,7 @@ public class TestClient {
 	        bos.write(publish);
 	        bos.flush();
 	        
-	        System.out.println("准备接收推送应答信息.");
+	        System.out.print("准备接收推送应答信息.");
 	        
 	        int count = 0;
 			while (count == 0) {
