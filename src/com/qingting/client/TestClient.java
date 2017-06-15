@@ -16,7 +16,7 @@ public class TestClient {
 		//String ipAddr="192.168.10.20";
 		//String port="50021";
 		String ipAddr="119.29.225.162";
-		String port="40040";
+		String port="40020";
       
         Socket sk=null; 
         //输入信息流

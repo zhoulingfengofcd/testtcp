@@ -20,7 +20,5 @@ public class TestServer {
             new Thread(new ServerThread(client)).start();  
         }  
         server.close();  
-	        
 	}
-
 }
