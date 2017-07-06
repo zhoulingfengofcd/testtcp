@@ -15,13 +15,12 @@ public class TestClient {
 	public static void main(String[] str) {  
 		//String ipAddr="192.168.10.20";
 		//String port="50021";
-		String ipAddr="119.29.225.162";
-		String port="40020";
+		String ipAddr="39.108.52.201";
+		String port="40040";
       
         Socket sk=null; 
         //输入信息流
         InputStream is=null; 
-        BufferedInputStream bi = null;
         //输出信息流  
         OutputStream os=null;
         BufferedOutputStream bos=null;
@@ -30,12 +29,52 @@ public class TestClient {
                     Integer.parseInt(port));  
             //输入信息流
             is=sk.getInputStream(); 
-            bi = new BufferedInputStream(is);
             //输出信息流  
             os=sk.getOutputStream();
             bos=new BufferedOutputStream(os);
             
-            //CONNECT
+            sendConn(is,bos);
+            
+            int count=0;
+            while(true){
+            	sendPublic(is,bos);
+            	sendPingreq(is,bos);
+            	count++;
+            	if(count==2){
+            		Thread.sleep(16000);
+            		
+            		
+            		/*sendClose(is,bos);
+            		
+					sk=new Socket(InetAddress.getByName(ipAddr),  
+					        Integer.parseInt(port));  
+					//输入信息流
+					is=sk.getInputStream(); 
+					//输出信息流  
+					os=sk.getOutputStream();
+					bos=new BufferedOutputStream(os);
+            		sendConn(is,bos);*/
+            	}
+            	if(count==5)
+            		while(true);
+            }
+        } catch (Exception e){  
+            e.printStackTrace();  
+        } finally {
+        	try {
+        		is.close();
+        		bos.close();
+				os.close();
+				sk.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			} 
+		} 
+  
+    }
+	public static void sendConn(InputStream is,BufferedOutputStream bos){
+		try{
+			//CONNECT
             byte[] ch={
             		//固定头部
             		16,//Connect 
@@ -54,8 +93,8 @@ public class TestClient {
             		//有效载荷
             		0,//length
             		2,
-            		0,//client ID(必须)
-            		1,
+            		55,//client ID(必须)
+            		56,//--ascii码8
             		
             		0,//length
             		1,
@@ -95,48 +134,52 @@ public class TestClient {
 			}
     		
             System.out.println("连接应答结束，开始推送信息.");
-            
-            count=0;
-            while(true){
-            	sendPublic(is,bos);
-            	count++;
-            }
-        } catch (Exception e){  
+		} catch (Exception e){  
             e.printStackTrace();  
-        } finally {
-        	try {
-        		bi.close();
-        		is.close();
-        		bos.close();
-				os.close();
-				sk.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			} 
-		} 
-  
-    }
-	
+        } 
+	}
 	public static void sendPublic(InputStream is,BufferedOutputStream bos){
 		try{
 			byte[] publish={
+					
 	        		//固定头部
 	        		50,//publish 
-	        		13,//remain length
+	        		29,//remain length
+	        		
 	        		//可变头部
 	        		0,//topic name length
-	        		3,
-	        		'a',//topic name
-	        		'/',
-	        		'b',
+	        		6,
+	        		'm',//topic name
+	        		'o',
+	        		'n',
+	        		't',
+	        		'o',
+	        		'r',
 	        		0,//message id
 	        		10,
-	        		1,//payload
-	        		0,
-	        		2,
-	        		65,
-	        		'o',
-	        		'k'
+	        		
+	        		//payload
+	        		17,//--year
+	        		1, //--month
+	        		1, //--day
+	        		12, //--hour
+	        		0, //--minute
+	        		0, //--second
+	        		
+	        		15,//--relay
+	        		0, //--flow
+	        		1,
+	        		1,
+	        		1,
+	        		1,
+	        		1,
+	        		
+	        		12,//--rawTds
+	        		12,
+	        		0,//--purTds
+	        		19,
+	        		75,//--temp
+	        		23//--humidity
 	        };
 	        bos.write(publish);
 	        bos.flush();
@@ -154,6 +197,48 @@ public class TestClient {
 			}
 			
 	        System.out.println("接收推送应答信息结束.");
+		} catch (Exception e){  
+            e.printStackTrace();  
+        } 
+	}
+	public static void sendPingreq(InputStream is,BufferedOutputStream bos){
+		try{
+			byte[] publish={
+	        		//固定头部
+	        		(byte)192,//publish 
+	        		0//remain length
+	        };
+	        bos.write(publish);
+	        bos.flush();
+	        
+	        System.out.print("准备接收心跳应答信息.");
+	        
+	        int count = 0;
+			while (count == 0) {
+				count = is.available();
+			}
+			byte[] b = new byte[count];
+			is.read(b);
+			for (byte c : b) {
+				System.out.print(c+" ");
+			}
+			
+	        System.out.println("接收心跳应答信息结束.");
+		} catch (Exception e){  
+            e.printStackTrace();  
+        } 
+	}
+	public static void sendClose(InputStream is,BufferedOutputStream bos){
+		try{
+			byte[] publish={
+	        		//固定头部
+	        		(byte)224,//disconnect 
+	        		0//remain length
+	        };
+	        bos.write(publish);
+	        bos.flush();
+	        
+	        System.out.println("连接断开.");
 		} catch (Exception e){  
             e.printStackTrace();  
         } 
